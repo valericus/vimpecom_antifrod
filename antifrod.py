@@ -5,14 +5,13 @@ import logging
 import requests
 from pystrix.agi import AGI
 from pystrix.agi.core import Verbose, Hangup
-from requests.exceptions import JSONDecodeError
 
 from utils import CallInfo, get_call_info
 
 log = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('action', choices=['register', 'check'], required=True)
+parser.add_argument('action', choices=['register', 'check'])
 parser.add_argument('-H', '--host', help='Host to register outgoing or check incoming call')
 
 
