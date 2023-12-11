@@ -60,7 +60,7 @@ def register_call(host: str, agi: AGI, call_info: CallInfo):
     url = f'http://{host}/aos/saveRequest'
     response = requests.post(url, json=call_info.to_json())
 
-    if response == 200:
+    if response.status_code == 200:
         agi.execute(Verbose(f'Registered call {call_info}'))
     else:
         agi.execute(
