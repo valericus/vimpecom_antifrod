@@ -1,2 +1,3 @@
 requests==2.31.0
 pystrix==1.2.0
+phonenumbers==8.13.26

@@ -1,28 +1,36 @@
 #!/bin/env python3
 import argparse
 from dataclasses import dataclass
+from typing import Optional
 
+import phonenumbers
 import requests
+from phonenumbers import PhoneNumber
+from phonenumbers.phonenumberutil import PhoneNumberFormat
 from pystrix.agi import AGI
 from pystrix.agi.core import Verbose, Hangup
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['register', 'check'])
 parser.add_argument('-H', '--host', help='Host to register outgoing or check incoming call')
+parser.add_argument('-t', '--timeout', help='Timeout for verification request in milliseconds',
+                    type=int, default=200)
 
 
 @dataclass
 class CallInfo:
-    caller: str
-    destination: str
-    redirection: str
+    caller: PhoneNumber
+    destination: PhoneNumber
+    redirection: Optional[PhoneNumber]
 
     def to_json(self):
-        return {
-            'msisdnA': self.caller,
-            'msisdnB': self.destination,
-            'redirectingNumber': self.redirection
+        result = {
+            'msisdnA': phonenumbers.format_number(self.caller, PhoneNumberFormat.E164),
+            'msisdnB': phonenumbers.format_number(self.destination, PhoneNumberFormat.E164),
         }
+        if self.redirection:
+            result['redirectingNumber'] = phonenumbers.format_number(self.redirection, PhoneNumberFormat.E164)
+        return result
 
     def __str__(self):
         if self.redirection is None:
@@ -38,6 +46,9 @@ class CallInfo:
 
         if result is None and required:
             raise AGIVariableNotFound(variable)
+
+        if result is not None:
+            result = phonenumbers.parse(result, 'RU')
 
         return result
 
@@ -56,9 +67,9 @@ class AGIVariableNotFound(RuntimeError):
         super().__init__(f'Variable {missing_variable} not found in Asterisk environment')
 
 
-def register_call(host: str, agi: AGI, call_info: CallInfo):
+def register_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
     url = f'http://{host}/aos/saveRequest'
-    response = requests.post(url, json=call_info.to_json())
+    response = requests.post(url, json=call_info.to_json(), timeout=timeout_millis / 1000)
 
     if response.status_code == 200:
         agi.execute(Verbose(f'Registered call {call_info}'))
@@ -68,9 +79,9 @@ def register_call(host: str, agi: AGI, call_info: CallInfo):
         )
 
 
-def check_call(host: str, agi: AGI, call_info: CallInfo):
+def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
     url = f'http://{host}/aos/checkRequest'
-    response = requests.post(url, json=call_info.to_json())
+    response = requests.post(url, json=call_info.to_json(), timeout=timeout_millis / 1000)
     try:
         response.raise_for_status()
         result = response.json()['result']
@@ -90,9 +101,9 @@ if __name__ == '__main__':
         call_info = CallInfo.from_agi(agi)
 
         if args.action == 'register':
-            register_call(args.host, agi, call_info)
+            register_call(args.host, agi, call_info, args.timeout)
         elif args.action == 'check':
-            check_call(args.host, agi, call_info)
+            check_call(args.host, agi, call_info, args.timeout)
         else:
             raise RuntimeError(f'Unknown action {args.action}')
 
