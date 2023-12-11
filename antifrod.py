@@ -1,6 +1,5 @@
 #!/bin/env python3
 import argparse
-import logging
 from dataclasses import dataclass
 
 import requests
@@ -64,7 +63,9 @@ def register_call(host: str, agi: AGI, call_info: CallInfo):
     if response == 200:
         agi.execute(Verbose(f'Registered call {call_info}'))
     else:
-        agi.execute(Verbose(f'Failed to register call {call_info}: {response.text}'))
+        agi.execute(
+            Verbose(f'Failed to register call {call_info}: {response.status_code} {response.reason} {response.text}')
+        )
 
 
 def check_call(host: str, agi: AGI, call_info: CallInfo):
