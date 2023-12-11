@@ -58,7 +58,7 @@ class AGIVariableNotFound(RuntimeError):
 
 
 def register_call(host: str, agi: AGI, call_info: CallInfo):
-    url = f'https://{host}/aos/saveRequest'
+    url = f'http://{host}/aos/saveRequest'
     response = requests.post(url, json=call_info.to_json())
 
     if response == 200:
@@ -68,7 +68,7 @@ def register_call(host: str, agi: AGI, call_info: CallInfo):
 
 
 def check_call(host: str, agi: AGI, call_info: CallInfo):
-    url = f'https://{host}/aos/checkRequest'
+    url = f'http://{host}/aos/checkRequest'
     response = requests.post(url, json=call_info.to_json())
     try:
         response.raise_for_status()
