@@ -8,11 +8,11 @@
 ## Регистрация звонка
 
 ```
-same => n,AGI(/opt/vimpelcom_antofrod/antifrod.py register -H your-prod-env-hsot.vimpelcom.ru)
+same => n,AGI(/opt/vimpelcom_antofrod/antifrod.py,register,-H,your-prod-env-hsot.vimpelcom.ru)
 ```
 
 ## Проверка звонка
 
 ```
-same => n,AGI(/opt/vimpelcom_antofrod/antifrod.py check -H your-prod-env-hsot.vimpelcom.ru)
+same => n,AGI(/opt/vimpelcom_antofrod/antifrod.py,check,-H,your-prod-env-hsot.vimpelcom.ru)
 ```
