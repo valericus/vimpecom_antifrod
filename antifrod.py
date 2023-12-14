@@ -23,13 +23,17 @@ class CallInfo:
     destination: PhoneNumber
     redirection: Optional[PhoneNumber]
 
+    @staticmethod
+    def _format_number(number: PhoneNumber) -> str:
+        return phonenumbers.format_number(number, PhoneNumberFormat.E164)[1:]
+
     def to_json(self):
         result = {
-            'msisdnA': phonenumbers.format_number(self.caller, PhoneNumberFormat.E164),
-            'msisdnB': phonenumbers.format_number(self.destination, PhoneNumberFormat.E164),
+            'msisdnA': self._format_number(self.caller),
+            'msisdnB': self._format_number(self.destination),
         }
         if self.redirection:
-            result['redirectingNumber'] = phonenumbers.format_number(self.redirection, PhoneNumberFormat.E164)
+            result['redirectingNumber'] = self._format_number(self.redirection)
         return result
 
     def __str__(self):
