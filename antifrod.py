@@ -5,7 +5,6 @@ from typing import Optional
 
 import phonenumbers
 import requests
-from phonenumbers import PhoneNumber
 from phonenumbers.phonenumberutil import PhoneNumberFormat
 from pystrix.agi import AGI
 from pystrix.agi.core import Verbose, Hangup
@@ -19,21 +18,17 @@ parser.add_argument('-t', '--timeout', help='Timeout for verification request in
 
 @dataclass
 class CallInfo:
-    caller: PhoneNumber
-    destination: PhoneNumber
-    redirection: Optional[PhoneNumber]
-
-    @staticmethod
-    def _format_number(number: PhoneNumber) -> str:
-        return phonenumbers.format_number(number, PhoneNumberFormat.E164)[1:]
+    caller: str
+    destination: str
+    redirection: Optional[str]
 
     def to_json(self):
         result = {
-            'msisdnA': self._format_number(self.caller),
-            'msisdnB': self._format_number(self.destination),
+            'msisdnA': self.caller,
+            'msisdnB': self.destination,
         }
         if self.redirection:
-            result['redirectingNumber'] = self._format_number(self.redirection)
+            result['redirectingNumber'] = self.redirection
         return result
 
     def __str__(self):
@@ -43,7 +38,7 @@ class CallInfo:
             return f'from {self.caller} to {self.destination} over {self.redirection}'
 
     @staticmethod
-    def _get_var(environment: dict, variable: str, required: bool = False):
+    def _get_number(environment: dict, variable: str, required: bool = False):
         result = environment.get(variable)
         if result == 'unknown':
             result = None
@@ -52,16 +47,17 @@ class CallInfo:
             raise AGIVariableNotFound(variable)
 
         if result is not None:
-            result = phonenumbers.parse(result, 'RU')
+            number = phonenumbers.parse(result, 'RU')
+            result = phonenumbers.format_number(number, PhoneNumberFormat.E164)[1:]
 
         return result
 
     @classmethod
     def from_agi(cls, agi: AGI):
         environment = agi.get_environment()
-        caller = cls._get_var(environment, 'agi_callerid')
-        destination = cls._get_var(environment, 'agi_dnid')
-        redirection = cls._get_var(environment, 'agi_rdnis', required=False)
+        caller = cls._get_number(environment, 'agi_callerid')
+        destination = cls._get_number(environment, 'agi_dnid')
+        redirection = cls._get_number(environment, 'agi_rdnis', required=False)
 
         return CallInfo(caller, destination, redirection)
 
