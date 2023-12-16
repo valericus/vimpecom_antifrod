@@ -101,11 +101,13 @@ if __name__ == '__main__':
         call_info = CallInfo.from_agi(agi)
 
         if args.action == 'register':
+            syslog.syslog(LOG_INFO, f'Registering call {call_info} using host {args.host} with timeout {args.timeout}')
             register_call(args.host, agi, call_info, args.timeout)
         elif args.action == 'check':
+            syslog.syslog(LOG_INFO, f'Checking call {call_info} using host {args.host} with timeout {args.timeout}')
             check_call(args.host, agi, call_info, args.timeout)
         else:
-            raise RuntimeError(f'Unknown action {args.action}')
+            syslog.syslog(LOG_ERR, f'Unknown action {args.action}')
 
     except Exception as e:
         syslog.syslog(LOG_ERR, f'Something went wrong: {e}')
