@@ -1,13 +1,15 @@
 #!/bin/env python3
 import argparse
+import syslog
 from dataclasses import dataclass
+from syslog import LOG_INFO, LOG_ERR
 from typing import Optional
 
 import phonenumbers
 import requests
 from phonenumbers.phonenumberutil import PhoneNumberFormat
 from pystrix.agi import AGI
-from pystrix.agi.core import Verbose, Hangup
+from pystrix.agi.core import Hangup
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['register', 'check'])
@@ -72,11 +74,10 @@ def register_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int)
     response = requests.post(url, json=call_info.to_json(), timeout=timeout_millis / 1000)
 
     if response.status_code == 200:
-        agi.execute(Verbose(f'Registered call {call_info}'))
+        syslog.syslog(LOG_INFO, f'Registered call {call_info}')
     else:
-        agi.execute(
-            Verbose(f'Failed to register call {call_info}: {response.status_code} {response.reason} {response.text}')
-        )
+        syslog.syslog(LOG_ERR,
+                      f'Failed to register call {call_info}: {response.status_code} {response.reason} {response.text}')
 
 
 def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
@@ -86,12 +87,11 @@ def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
         response.raise_for_status()
         result = response.json()['result']
         if (isinstance(result, str) and result.upper() == 'FALSE') or result is False:
-            agi.execute(Verbose(f'Not registered call {call_info}, terminating'))
+            syslog.syslog(LOG_INFO, f'Not registered call {call_info}, terminating')
             agi.execute(Hangup())
     except Exception:
-        agi.execute(
-            Verbose(f'Failed to check call {call_info}: {response.status_code} {response.reason} {response.text}')
-        )
+        syslog.syslog(LOG_ERR,
+                      f'Failed to check call {call_info}: {response.status_code} {response.reason} {response.text}')
 
 
 if __name__ == '__main__':
@@ -108,4 +108,4 @@ if __name__ == '__main__':
             raise RuntimeError(f'Unknown action {args.action}')
 
     except Exception as e:
-        agi.execute(Verbose(f'Something went wrong: {e}'))
+        syslog.syslog(LOG_ERR, f'Something went wrong: {e}')
