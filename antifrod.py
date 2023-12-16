@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['register', 'check'])
 parser.add_argument('-H', '--host', help='Host to register outgoing or check incoming call')
 parser.add_argument('-t', '--timeout', help='Timeout for verification request in milliseconds',
-                    type=int, default=200)
+                    type=int, default=500)
 
 
 @dataclass
