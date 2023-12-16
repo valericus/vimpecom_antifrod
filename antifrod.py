@@ -9,7 +9,7 @@ import phonenumbers
 import requests
 from phonenumbers.phonenumberutil import PhoneNumberFormat
 from pystrix.agi import AGI
-from pystrix.agi.core import Hangup
+from pystrix.agi.core import Hangup, Noop
 
 parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['register', 'check'])
@@ -108,6 +108,7 @@ def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
 
 if __name__ == '__main__':
     agi = AGI()
+    agi.execute(Noop())
     try:
         args = parser.parse_args()
         call_info = CallInfo.from_agi(agi, args.code)
