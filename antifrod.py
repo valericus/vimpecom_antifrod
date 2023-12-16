@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('action', choices=['register', 'check'])
 parser.add_argument('-H', '--host', help='Host to register outgoing or check incoming call')
 parser.add_argument('-t', '--timeout', help='Timeout for verification request in milliseconds',
-                    type=int, default=500)
+                    type=int, default=1000)
 
 
 @dataclass
@@ -95,9 +95,9 @@ def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    agi = AGI()
     try:
+        args = parser.parse_args()
+        agi = AGI()
         call_info = CallInfo.from_agi(agi)
 
         if args.action == 'register':
