@@ -95,9 +95,9 @@ def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
 
 
 if __name__ == '__main__':
+    agi = AGI()
     try:
         args = parser.parse_args()
-        agi = AGI()
         call_info = CallInfo.from_agi(agi)
 
         if args.action == 'register':
