@@ -98,7 +98,7 @@ def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
         response_json = response.json()
         syslog.syslog(LOG_INFO, f'Response from check service: {response_json}')
         result = response_json['result']
-        if (isinstance(result, str) and result.upper() == 'FALSE') or result is False:
+        if result == 'FALSE':
             syslog.syslog(LOG_INFO, f'Not registered call {call_info}, terminating')
             agi.execute(Hangup())
         else:
