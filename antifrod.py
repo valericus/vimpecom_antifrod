@@ -79,7 +79,7 @@ class InvalidPhoneNumber(RuntimeError):
         super().__init__(f'Invalid {variable} number {number}')
 
 
-def register_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
+def register_call(host: str, call_info: CallInfo, timeout_millis: int):
     url = f'http://{host}/aos/saveRequest'
     response = requests.post(url, json=call_info.to_json(), timeout=timeout_millis / 1000)
 
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
         if args.action == 'register':
             syslog.syslog(LOG_INFO, f'Registering call {call_info} using host {args.host} with timeout {args.timeout}')
-            register_call(args.host, agi, call_info, args.timeout)
+            register_call(args.host, call_info, args.timeout)
         elif args.action == 'check':
             syslog.syslog(LOG_INFO, f'Checking call {call_info} using host {args.host} with timeout {args.timeout}')
             check_call(args.host, agi, call_info, args.timeout)
