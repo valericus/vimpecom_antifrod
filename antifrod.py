@@ -17,6 +17,7 @@ parser.add_argument('-H', '--host', help='Host to register outgoing or check inc
 parser.add_argument('-t', '--timeout', help='Timeout for verification request in milliseconds',
                     type=int, default=1000)
 parser.add_argument('-c', '--code', help='City code to add to short numbers', default='3953')
+parser.add_argument('-d', '--dry-run', action='store_true', help='Check without drop')
 
 
 @dataclass
@@ -90,7 +91,7 @@ def register_call(host: str, call_info: CallInfo, timeout_millis: int):
                       f'Failed to register call {call_info}: {response.status_code} {response.reason} {response.text}')
 
 
-def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
+def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int, dry_run: bool):
     url = f'http://{host}/aos/checkRequest'
     response = requests.post(url, json=call_info.to_json(), timeout=timeout_millis / 1000)
     try:
@@ -99,8 +100,11 @@ def check_call(host: str, agi: AGI, call_info: CallInfo, timeout_millis: int):
         syslog.syslog(LOG_INFO, f'Response from check service: {response_json}')
         result = response_json['result']
         if result == 'FALSE':
-            syslog.syslog(LOG_INFO, f'Not registered call {call_info}, terminating')
-            agi.execute(Hangup())
+            if dry_run:
+                syslog.syslog(LOG_INFO, f'Not registered call {call_info}, pass because of dry run')
+            else:
+                syslog.syslog(LOG_INFO, f'Not registered call {call_info}, terminating')
+                agi.execute(Hangup())
         else:
             syslog.syslog(LOG_INFO, f'Call from {call_info} is registered, passing')
     except Exception:
@@ -120,7 +124,7 @@ if __name__ == '__main__':
             register_call(args.host, call_info, args.timeout)
         elif args.action == 'check':
             syslog.syslog(LOG_INFO, f'Checking call {call_info} using host {args.host} with timeout {args.timeout}')
-            check_call(args.host, agi, call_info, args.timeout)
+            check_call(args.host, agi, call_info, args.timeout, args.dry_run)
         else:
             syslog.syslog(LOG_ERR, f'Unknown action {args.action}')
 
